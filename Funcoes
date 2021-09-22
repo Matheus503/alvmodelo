@@ -1,0 +1,150 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZTREINAMENTO_ALV0017_F01
+*&---------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  F_BUSCA_DADOS
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM F_BUSCA_DADOS .
+
+  SELECT *
+  FROM ZTREINAMENTO_09
+  INTO TABLE GT_ZTREINAMENTO_09
+  WHERE CPF      IN S_CPF.
+
+ENDFORM.
+**&---------------------------------------------------------------------*
+**&      Form  F_MONTA_SAIDA
+**&---------------------------------------------------------------------*
+**       text
+**----------------------------------------------------------------------*
+**  -->  p1        text
+**  <--  p2        text
+**----------------------------------------------------------------------*
+FORM F_MONTA_SAIDA .
+
+  LOOP AT GT_ZTREINAMENTO_09 INTO GS_ZTREINAMENTO_09.
+
+    GS_SAIDA-CPF      = GS_ZTREINAMENTO_09-CPF.
+    GS_SAIDA-NOME     = GS_ZTREINAMENTO_09-NOME.
+    GS_SAIDA-IDADE    = GS_ZTREINAMENTO_09-IDADE.
+    GS_SAIDA-TRABALHO = GS_ZTREINAMENTO_09-TRABALHO.
+    GS_SAIDA-SALARIO  = GS_ZTREINAMENTO_09-SALARIO.
+    GS_SAIDA-CIDADE   = GS_ZTREINAMENTO_09-CIDADE.
+    GS_SAIDA-ESTADO   = GS_ZTREINAMENTO_09-ESTADO.
+
+    APPEND GS_SAIDA TO GT_SAIDA.
+  ENDLOOP.
+
+ENDFORM.
+**&---------------------------------------------------------------------*
+**&      Form  F_EXIBE_ALV
+**&---------------------------------------------------------------------*
+**       text
+**----------------------------------------------------------------------*
+**  -->  p1        text
+**  <--  p2        text
+**----------------------------------------------------------------------*
+FORM F_EXIBE_ALV .
+
+PERFORM F_FIELDCAT.
+PERFORM F_LAYOUT.
+
+  CALL FUNCTION 'REUSE_ALV_GRID_DISPLAY'
+    EXPORTING
+      I_CALLBACK_PROGRAM     = SY-REPID
+      I_CALLBACK_TOP_OF_PAGE = 'F_HEADER'
+      IS_LAYOUT              = GS_LAYOUT
+      IT_FIELDCAT            = GT_FIELDCAT
+    TABLES
+      T_OUTTAB               = GT_SAIDA[]
+    EXCEPTIONS
+      PROGRAM_ERROR          = 1
+      OTHERS                 = 2.
+ENDFORM.
+**&---------------------------------------------------------------------*
+**&     Form  F_HEADER
+**&---------------------------------------------------------------------*
+**       text
+**----------------------------------------------------------------------*
+**  -->  p1        text
+**  <--  p2        text
+**----------------------------------------------------------------------*
+FORM F_HEADER .
+
+  CLEAR: GS_HEADER, GT_HEADER[].
+
+  GS_HEADER-TYP = 'H'.
+  GS_HEADER-INFO = 'Relatorio ALV Modelo - Matheus Gomes'.
+  APPEND GS_HEADER TO GT_HEADER.
+
+  GS_HEADER-TYP = 'S'.
+  GS_HEADER-KEY = TEXT-001. "Data:
+  WRITE SY-DATUM TO GS_HEADER-INFO.
+  APPEND GS_HEADER TO GT_HEADER.
+
+  GS_HEADER-TYP = 'S'.
+  GS_HEADER-KEY = 'Hora:'.
+  WRITE SY-UZEIT TO GS_HEADER-INFO.
+  APPEND GS_HEADER TO GT_HEADER.
+
+
+  CALL FUNCTION 'REUSE_ALV_COMMENTARY_WRITE'
+    EXPORTING
+      IT_LIST_COMMENTARY = GT_HEADER
+      I_LOGO             = 'ENJOYSAP_LOGO'.
+
+ENDFORM.
+**&---------------------------------------------------------------------*
+**&      Form  F_FIELDCAT
+**&---------------------------------------------------------------------*
+**       text
+**----------------------------------------------------------------------*
+**  -->  p1        text
+**  <--  p2        text
+**----------------------------------------------------------------------*
+FORM F_FIELDCAT .
+
+  CALL FUNCTION 'REUSE_ALV_FIELDCATALOG_MERGE'
+    EXPORTING
+      I_PROGRAM_NAME         = SY-REPID
+      I_INTERNAL_TABNAME     = 'GT_SAIDA'
+      I_STRUCTURE_NAME       = 'ZTREINAMENTO_09S'
+    CHANGING
+      CT_FIELDCAT            = GT_FIELDCAT
+    EXCEPTIONS
+      INCONSISTENT_INTERFACE = 1
+      PROGRAM_ERROR          = 2
+      OTHERS                 = 3.
+
+
+  LOOP AT GT_FIELDCAT INTO GS_FIELDCAT.
+
+    CASE GS_FIELDCAT-FIELDNAME.
+      WHEN 'CPF'.
+        GS_FIELDCAT-EDIT_MASK = '___.___.___-__'.
+    ENDCASE.
+
+  MODIFY GT_FIELDCAT FROM GS_FIELDCAT.
+
+  ENDLOOP.
+
+ENDFORM.
+*&---------------------------------------------------------------------*
+*&      Form  F_LAYOUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM F_LAYOUT .
+
+ GS_LAYOUT-ZEBRA = 'X'.
+ GS_LAYOUT-COLWIDTH_OPTIMIZE = 'X'.
+
+ENDFORM.
