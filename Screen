@@ -1,0 +1,8 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZTREINAMENTO_ALV017_SCR
+*&---------------------------------------------------------------------*
+SELECTION-SCREEN BEGIN OF BLOCK B1 WITH FRAME TITLE TEXT-S01.
+
+SELECT-OPTIONS: S_CPF FOR ZTREINAMENTO_09-CPF NO INTERVALS.
+
+SELECTION-SCREEN END OF BLOCK B1.
